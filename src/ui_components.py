@@ -47,15 +47,14 @@ class DeviceControl(ft.Row):
             await self.stop_script()
         else:
             selected_script = self.app_logic.get_selected_script()
-            should_like = self.app_logic.like_checkbox.value
             if selected_script and selected_script in self.app_logic.available_scripts:
-                await self.start_script(selected_script, should_like)
+                await self.start_script(selected_script)
             else:
                 await self.app_logic.show_snackbar("Please select a valid script!")
 
-    async def start_script(self, script_filename, should_like):
+    async def start_script(self, script_filename):
         await self.update_ui_for_running_state()
-        self.running_task = asyncio.create_task(self.run_script_async(script_filename, self.device_id, should_like))
+        self.running_task = asyncio.create_task(self.run_script_async(script_filename, self.device_id))
 
     async def stop_script(self):
         print(f"[{self.device_id}] Requesting stop...")
@@ -83,8 +82,6 @@ class DeviceControl(ft.Row):
     async def run_script_async(self, script_filename, device_id, should_like):
         script_path = os.path.join("assets", "scripts", script_filename)
         args = [sys.executable, script_path, device_id]
-        if should_like:
-            args.append("--like")
 
         try:
             print(f"[{device_id}] Executing: {' '.join(args)}")

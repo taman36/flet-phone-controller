@@ -17,7 +17,6 @@ class AppLogic:
             options=[],
             expand=True,
         )
-        self.like_checkbox = ft.Checkbox(label="Auto-like videos", value=False, tooltip="Enable to automatically like videos")
         self.selected_count_text = ft.Text("0 devices selected")
         self.snack_bar = ft.SnackBar(content=ft.Text(""), duration=2000)
         self.page.overlay.append(self.snack_bar)
@@ -77,8 +76,7 @@ class AppLogic:
             await self.show_snackbar("Please select at least one device!")
             return
             
-        should_like = self.like_checkbox.value
-        tasks = [dev.start_script(selected_script, should_like) for dev in selected_devices if not dev.is_running]
+        tasks = [dev.start_script(selected_script) for dev in selected_devices if not dev.is_running]
         await asyncio.gather(*tasks)
 
     def get_selected_script(self):
@@ -106,7 +104,6 @@ class AppUI(ft.Column):
             content=ft.Row(
                 [
                     self.app_logic.script_dropdown,
-                    self.app_logic.like_checkbox,
                     ft.VerticalDivider(width=10),
                     ft.FilledButton(
                         text="Run on Selected", icon=ft.Icons.PLAY_ARROW,
