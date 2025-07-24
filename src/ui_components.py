@@ -79,7 +79,7 @@ class DeviceControl(ft.Row):
         except Exception as e:
             print(f"Error while stopping atx-agent on {self.device_id}: {e}")
 
-    async def run_script_async(self, script_filename, device_id, should_like):
+    async def run_script_async(self, script_filename, device_id):
         script_path = os.path.join("assets", "scripts", script_filename)
         args = [sys.executable, script_path, device_id]
 
