@@ -2,7 +2,24 @@
 import flet as ft
 import asyncio
 import os
-from .ui_components import DeviceControl
+import sys
+import yaml
+from src.ui_components import DeviceControl
+
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+CONFIG_PATH = os.path.join(BASE_DIR, "assets/scripts/config.yaml")
+
+def load_config():
+    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+def save_config(config):
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        yaml.dump(config, f, allow_unicode=True)
 
 class AppLogic:
     """Handles the main application state and business logic."""
@@ -10,7 +27,8 @@ class AppLogic:
         self.page = page
         self.progress_ring = progress_ring
         self.available_scripts = []
-        
+        self.script_display_names = {}
+
         self.device_list_view = ft.ListView(expand=True, spacing=5, auto_scroll=True)
         self.script_dropdown = ft.Dropdown(
             hint_text="Select a script",
@@ -22,21 +40,29 @@ class AppLogic:
         self.page.overlay.append(self.snack_bar)
 
     def load_scripts(self):
-        """Finds script files in the 'assets/scripts' directory."""
+        """Finds script files in the 'assets/scripts' directory and loads display names."""
         script_dir = os.path.join("assets", "scripts")
         print(f"Looking for scripts in '{script_dir}'...")
         self.available_scripts.clear()
-        
+        self.script_display_names.clear()
+
+        config = load_config()
         if not os.path.isdir(script_dir):
             print(f"Warning: Directory not found: '{script_dir}'")
             return
-            
+
         for filename in os.listdir(script_dir):
             if filename.endswith('.py'):
                 self.available_scripts.append(filename)
-                print(f"Found script: {filename}")
-        
-        self.script_dropdown.options = [ft.dropdown.Option(s) for s in self.available_scripts]
+                display_name = config.get(filename, {}).get("DISPLAY_NAME", filename)
+                self.script_display_names[filename] = display_name
+                print(f"Found script: {filename} ({display_name})")
+
+        # Dropdown: show display name, value is filename
+        self.script_dropdown.options = [
+            ft.dropdown.Option(key=script, text=self.script_display_names[script])
+            for script in self.available_scripts
+        ]
 
     async def scan_devices(self, e=None):
         print("Scanning for ADB devices...")
@@ -100,6 +126,7 @@ class AppUI(ft.Column):
         self.progress_ring = ft.ProgressRing(visible=False, width=16, height=16, stroke_width=2)
         self.app_logic = AppLogic(page, self.progress_ring)
 
+        # --- Main Tab ---
         toolbar = ft.Container(
             content=ft.Row(
                 [
@@ -126,15 +153,106 @@ class AppUI(ft.Column):
             padding=ft.padding.symmetric(vertical=3, horizontal=15),
             border=ft.border.only(top=ft.border.BorderSide(1, ft.Colors.OUTLINE))
         )
-        
+        main_tab = ft.Column([
+            toolbar,
+            ft.Container(
+                content=self.app_logic.device_list_view,
+                expand=True, padding=10
+            ),
+            status_bar,
+        ], expand=True, spacing=0)
+
+        # --- Settings Tab ---
+        config = load_config()
+        fields = {}
+        cards = []
+        for script, params in config.items():
+            display_name = params.get("DISPLAY_NAME", script)
+            param_fields = {}
+            controls = []
+            for key, value in params.items():
+                if key == "DISPLAY_NAME":
+                    continue  # Don't show DISPLAY_NAME field
+                label = key.replace("_", " ").capitalize()
+                if isinstance(value, list):
+                    field = ft.TextField(
+                        label=f"{label} (separate by ';')",
+                        value=";".join(value),
+                        multiline=True,
+                        width=400,
+                        label_style=ft.TextStyle(color=ft.Colors.BLACK),
+                        text_style=ft.TextStyle(color=ft.Colors.RED)
+                    )
+                else:
+                    field = ft.TextField(
+                        label=label,
+                        value=str(value),
+                        width=400,
+                        label_style=ft.TextStyle(color=ft.Colors.BLACK),
+                        text_style=ft.TextStyle(color=ft.Colors.RED)
+                    )
+                param_fields[key] = field
+                controls.append(field)
+            fields[script] = param_fields
+            cards.append(
+                ft.Card(
+                    content=ft.Container(
+                        content=ft.Column([
+                            ft.Text(display_name, size=18, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK),
+                            *controls
+                        ], spacing=10),
+                        padding=20,
+                        bgcolor=ft.Colors.WHITE,
+                        border_radius=10,
+                        width=450
+                    ),
+                    elevation=3,
+                    margin=10
+                )
+            )
+
+        def on_save(e):
+            for script, params in fields.items():
+                for key, field in params.items():
+                    value = field.value
+                    if isinstance(config[script][key], float):
+                        try:
+                            value = float(value)
+                        except:
+                            value = config[script][key]
+                    elif isinstance(config[script][key], int):
+                        try:
+                            value = int(value)
+                        except:
+                            value = config[script][key]
+                    elif isinstance(config[script][key], list):
+                        value = [x.strip() for x in value.split(";") if x.strip()]
+                    config[script][key] = value
+            save_config(config)
+            page.snack_bar = ft.SnackBar(ft.Text("Settings saved!"))
+            page.snack_bar.open = True
+            page.update()
+
+        settings_tab = ft.Column([
+            ft.Text("Edit script parameters", size=24, weight=ft.FontWeight.BOLD, color=ft.Colors.PRIMARY),
+            ft.Divider(),
+            ft.Row(cards, wrap=True, spacing=20, run_spacing=20),
+            ft.ElevatedButton("Save settings", icon=ft.Icons.SAVE, on_click=on_save)
+        ], scroll="always", expand=True)
+
+        # --- Tabs Layout ---
         super().__init__(
             controls=[
-                toolbar,
-                ft.Container(
-                    content=self.app_logic.device_list_view,
-                    expand=True, padding=10
-                ),
-                status_bar,
+                ft.Tabs(
+                    selected_index=0,
+                    tabs=[
+                        ft.Tab(text="Main", content=main_tab),
+                        ft.Tab(text="Settings", content=settings_tab),
+                    ],
+                    expand=1
+                )
             ],
-            expand=True, spacing=0
+            expand=True
         )
+
+        self.app_logic.load_scripts()

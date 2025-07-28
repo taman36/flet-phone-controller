@@ -3,24 +3,41 @@ import sys
 import time
 import random
 import itertools
+import yaml
+import os
 
 # ===================================================================
-# SCRIPT PARAMETERS
+# DEFINE BASE_DIR
 # ===================================================================
-SEARCH_KEYWORD = "bitcoin"
-MIN_WATCH_TIME_S = 4.0
-MAX_WATCH_TIME_S = 8.0
-LIKE_CHANCE_PERCENT = 75
-FOLLOW_CHANCE_PERCENT = 50
-VIDEOS_TO_SCROLL = 50
-COMMENT_CHANCE_PERCENT = 50
-COMMENT_LIST = [
+import os
+import sys
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+# ===================================================================
+# LOAD PARAMETERS FROM CONFIG.YAML
+# ===================================================================
+config_path = os.path.join(BASE_DIR, "assets/scripts/config.yaml")
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+params = config.get(os.path.basename(__file__), {})
+
+SEARCH_KEYWORD = params.get("SEARCH_KEYWORD", "bitcoin")
+MIN_WATCH_TIME_S = params.get("MIN_WATCH_TIME_S", 4.0)
+MAX_WATCH_TIME_S = params.get("MAX_WATCH_TIME_S", 8.0)
+LIKE_CHANCE_PERCENT = params.get("LIKE_CHANCE_PERCENT", 75)
+FOLLOW_CHANCE_PERCENT = params.get("FOLLOW_CHANCE_PERCENT", 50)
+VIDEOS_TO_SCROLL = params.get("VIDEOS_TO_SCROLL", 50)
+COMMENT_CHANCE_PERCENT = params.get("COMMENT_CHANCE_PERCENT", 50)
+COMMENT_LIST = params.get("COMMENT_LIST", [
     "Great video!",
     "Love this!",
     "Very Good",
     "So cool.",
     "Nice one"
-]
+])
 # ===================================================================
 
 def main(device_id):

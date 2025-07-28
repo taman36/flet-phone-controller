@@ -1,0 +1,15 @@
+<!-- filepath: c:\Users\thuan\OneDrive\Desktop\instagram\flet-phone-controller\assets\instapilot_logo.svg -->
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="16" y="16" width="96" height="96" rx="24" fill="#fff" stroke="#E1306C" stroke-width="4"/>
+  <circle cx="64" cy="64" r="32" fill="url(#grad)" stroke="#E1306C" stroke-width="4"/>
+  <circle cx="64" cy="64" r="14" fill="#fff" stroke="#E1306C" stroke-width="2"/>
+  <rect x="90" y="38" width="14" height="14" rx="7" fill="#E1306C"/>
+  <polygon points="40,88 64,40 88,88 64,76" fill="#E1306C" opacity="0.7"/>
+  <defs>
+    <radialGradient id="grad" cx="0" cy="0" r="1" gradientTransform="translate(64 64) scale(32)">
+      <stop stop-color="#FCAF45"/>
+      <stop offset="0.5" stop-color="#E1306C"/>
+      <stop offset="1" stop-color="#833AB4"/>
+    </radialGradient>
+  </defs>
+</svg>

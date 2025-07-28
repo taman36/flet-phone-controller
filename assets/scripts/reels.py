@@ -1,24 +1,36 @@
-import uiautomator2 as u2
+import os
 import sys
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
+import uiautomator2 as u2
 import time
 import random
+import yaml
 
 # ===================================================================
-# SCRIPT PARAMETERS
+# LOAD PARAMETERS FROM CONFIG.YAML
 # ===================================================================
-MIN_WATCH_TIME_S = 4.0      # Minimum watch time in seconds
-MAX_WATCH_TIME_S = 8.0      # Maximum watch time in seconds
-LIKE_CHANCE_PERCENT = 75    # 75% chance to like the video
-FOLLOW_CHANCE_PERCENT = 50   # 5% chance to follow if a follow button is visible
-VIDEOS_TO_SCROLL = 50       # Stop after scrolling this many videos
-COMMENT_CHANCE_PERCENT = 50  # 10% chance to leave a comment
-COMMENT_LIST = [           # List of comments to choose from randomly
+config_path = os.path.join(BASE_DIR, "assets/scripts/config.yaml")
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+params = config.get(os.path.basename(__file__), {})
+
+MIN_WATCH_TIME_S = params.get("MIN_WATCH_TIME_S", 4.0)
+MAX_WATCH_TIME_S = params.get("MAX_WATCH_TIME_S", 8.0)
+LIKE_CHANCE_PERCENT = params.get("LIKE_CHANCE_PERCENT", 75)
+FOLLOW_CHANCE_PERCENT = params.get("FOLLOW_CHANCE_PERCENT", 50)
+VIDEOS_TO_SCROLL = params.get("VIDEOS_TO_SCROLL", 50)
+COMMENT_CHANCE_PERCENT = params.get("COMMENT_CHANCE_PERCENT", 50)
+COMMENT_LIST = params.get("COMMENT_LIST", [
     "Great video!",
     "Love this!",
     "Very Good",
     "So cool.",
     "Nice one"
-]
+])
 # ===================================================================
 
 def main(device_id):
@@ -47,8 +59,8 @@ def main(device_id):
         # Get screen dimensions for swiping
         width, height = d.window_size()
         start_x = width // 2
-        start_y = height * 0.8
-        end_y = height * 0.2
+        start_y = int(height * 0.8)
+        end_y = int(height * 0.2)
 
         # Start the limited scroll loop
         print(f"[{device_id}] Starting scroll loop for {VIDEOS_TO_SCROLL} videos...")

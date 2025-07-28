@@ -9,6 +9,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .main_app import AppLogic
 
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 class DeviceControl(ft.Row):
     """A UI control representing a single device row."""
     def __init__(self, device_id: str, app_logic: 'AppLogic'):
@@ -80,8 +85,8 @@ class DeviceControl(ft.Row):
             print(f"Error while stopping atx-agent on {self.device_id}: {e}")
 
     async def run_script_async(self, script_filename, device_id):
-        script_path = os.path.join("assets", "scripts", script_filename)
-        args = [sys.executable, script_path, device_id]
+        script_path = os.path.join(BASE_DIR, "assets/scripts", script_filename)
+        args = ["python", script_path, device_id, "--run-script"]
 
         try:
             print(f"[{device_id}] Executing: {' '.join(args)}")

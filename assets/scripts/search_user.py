@@ -3,24 +3,36 @@ import sys
 import time
 import random
 import itertools
+import yaml
+import os
+
+if hasattr(sys, '_MEIPASS'):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # ===================================================================
-# SCRIPT PARAMETERS
+# LOAD PARAMETERS FROM CONFIG.YAML
 # ===================================================================
-SEARCH_USER = "realdonaldtrump"
-MIN_WATCH_TIME_S = 4.0
-MAX_WATCH_TIME_S = 8.0
-LIKE_CHANCE_PERCENT = 75
-FOLLOW_CHANCE_PERCENT = 50
-VIDEOS_TO_SCROLL = 50
-COMMENT_CHANCE_PERCENT = 50
-COMMENT_LIST = [
+config_path = os.path.join(BASE_DIR, "assets/scripts/config.yaml")
+with open(config_path, "r", encoding="utf-8") as f:
+    config = yaml.safe_load(f)
+params = config.get(os.path.basename(__file__), {})
+
+SEARCH_USER = params.get("SEARCH_USER", "realdonaldtrump")
+MIN_WATCH_TIME_S = params.get("MIN_WATCH_TIME_S", 4.0)
+MAX_WATCH_TIME_S = params.get("MAX_WATCH_TIME_S", 8.0)
+LIKE_CHANCE_PERCENT = params.get("LIKE_CHANCE_PERCENT", 75)
+FOLLOW_CHANCE_PERCENT = params.get("FOLLOW_CHANCE_PERCENT", 50)
+VIDEOS_TO_SCROLL = params.get("VIDEOS_TO_SCROLL", 50)
+COMMENT_CHANCE_PERCENT = params.get("COMMENT_CHANCE_PERCENT", 50)
+COMMENT_LIST = params.get("COMMENT_LIST", [
     "Great video!",
     "Love this!",
     "Very Good",
     "So cool.",
     "Nice one"
-]
+])
 # ===================================================================
 
 def main(device_id):
@@ -40,14 +52,14 @@ def main(device_id):
         d.press("enter")
         time.sleep(4)
 
-        print(f"[{device_id}] Switching to Reels tab for the keyword...")
+        print(f"[{device_id}] Switching to Accounts tab for the keyword...")
         reels_search_tab = d(text="Accounts")
         if not reels_search_tab.exists:
-            print(f"[{device_id}] ERROR: 'Reels' tab not found in search results.")
+            print(f"[{device_id}] ERROR: 'Accounts' tab not found in search results.")
             return
         reels_search_tab.click()
         time.sleep(3)
-        #Click on first account matched
+        # Click on first account matched
         d(resourceId="com.instagram.android:id/row_search_user_username")[0].click()
         time.sleep(2)
         d(resourceId="com.instagram.android:id/profile_tab_icon_view")[1].click()

@@ -1,0 +1,44 @@
+reels.py:
+  COMMENT_CHANCE_PERCENT: 70
+  COMMENT_LIST:
+  - Great video!
+  - Love this!
+  - Very Good
+  - So cool.
+  - Nice one
+  DISPLAY_NAME: Instagram Reels Bot
+  FOLLOW_CHANCE_PERCENT: 50
+  LIKE_CHANCE_PERCENT: 75
+  MAX_WATCH_TIME_S: 8.0
+  MIN_WATCH_TIME_S: 4.0
+  VIDEOS_TO_SCROLL: 50
+search_keyword.py:
+  COMMENT_CHANCE_PERCENT: 50
+  COMMENT_LIST:
+  - Great video!
+  - Love this!
+  - Very Good
+  - So cool.
+  - Nice one
+  DISPLAY_NAME: Search by Keyword
+  FOLLOW_CHANCE_PERCENT: 50
+  LIKE_CHANCE_PERCENT: 75
+  MAX_WATCH_TIME_S: 8.0
+  MIN_WATCH_TIME_S: 4.0
+  SEARCH_KEYWORD: sexy dance
+  VIDEOS_TO_SCROLL: 50
+search_user.py:
+  COMMENT_CHANCE_PERCENT: 50
+  COMMENT_LIST:
+  - Great video!
+  - Love this!
+  - Very Good
+  - So cool.
+  - Nice one
+  DISPLAY_NAME: Search by Username
+  FOLLOW_CHANCE_PERCENT: 50
+  LIKE_CHANCE_PERCENT: 75
+  MAX_WATCH_TIME_S: 8.0
+  MIN_WATCH_TIME_S: 4.0
+  SEARCH_USER: realdonaldtrump
+  VIDEOS_TO_SCROLL: 50
