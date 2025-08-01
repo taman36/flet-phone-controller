@@ -38,6 +38,7 @@ class AppLogic:
         self.selected_count_text = ft.Text("0 devices selected")
         self.snack_bar = ft.SnackBar(content=ft.Text(""), duration=2000)
         self.page.overlay.append(self.snack_bar)
+        self.select_all_button = None
 
     def load_scripts(self):
         """Finds script files in the 'assets/scripts' directory and loads display names."""
@@ -118,13 +119,32 @@ class AppLogic:
         total = sum(1 for c in controls if isinstance(c, DeviceControl))
         count = sum(1 for c in controls if isinstance(c, DeviceControl) and c.checkbox.value)
         self.selected_count_text.value = f"{count} / {total} devices selected"
+        
+        # Toggle select all button text
+        if self.select_all_button:
+            all_selected = total > 0 and count == total
+            self.select_all_button.text = "Deselect All" if all_selected else "Select All"
+
         self.page.update()
+
+    async def toggle_select_all(self, e):
+        controls = self.device_list_view.controls
+        total = sum(1 for c in controls if isinstance(c, DeviceControl))
+        count = sum(1 for c in controls if isinstance(c, DeviceControl) and c.checkbox.value)
+        
+        new_value = not (total > 0 and count == total)
+        
+        for control in controls:
+            if isinstance(control, DeviceControl):
+                control.checkbox.value = new_value
+        await self.update_selected_count()
 
 class AppUI(ft.Column):
     """Constructs the main user interface."""
     def __init__(self, page: ft.Page):
         self.progress_ring = ft.ProgressRing(visible=False, width=16, height=16, stroke_width=2)
         self.app_logic = AppLogic(page, self.progress_ring)
+        self.app_logic.select_all_button = ft.TextButton("Select All", on_click=self.app_logic.toggle_select_all)
 
         # --- Main Tab ---
         toolbar = ft.Container(
@@ -149,7 +169,10 @@ class AppUI(ft.Column):
             border=ft.border.only(bottom=ft.border.BorderSide(1, ft.Colors.OUTLINE))
         )
         status_bar = ft.Container(
-            content=ft.Row([self.app_logic.selected_count_text]),
+            content=ft.Row([
+                self.app_logic.selected_count_text,
+                self.app_logic.select_all_button
+            ]),
             padding=ft.padding.symmetric(vertical=3, horizontal=15),
             border=ft.border.only(top=ft.border.BorderSide(1, ft.Colors.OUTLINE))
         )

@@ -27,6 +27,7 @@ class DeviceControl(ft.Row):
             on_change=self.app_logic.update_selected_count
         )
         self.device_id_text = ft.Text(self.device_id, expand=True)
+        self.status_text = ft.Text("Idle", expand=True, text_align=ft.TextAlign.CENTER)
         self.status_indicator = ft.ProgressRing(width=16, height=16, stroke_width=2, visible=False)
         self.play_button = ft.IconButton(
             icon=ft.Icons.PLAY_ARROW_ROUNDED,
@@ -38,6 +39,7 @@ class DeviceControl(ft.Row):
             controls=[
                 self.checkbox,
                 self.device_id_text,
+                self.status_text,
                 ft.Row(controls=[self.status_indicator, self.play_button], spacing=5)
             ],
             vertical_alignment=ft.CrossAxisAlignment.CENTER
@@ -86,24 +88,35 @@ class DeviceControl(ft.Row):
 
     async def run_script_async(self, script_filename, device_id):
         script_path = os.path.join(BASE_DIR, "assets/scripts", script_filename)
-        args = ["python", script_path, device_id, "--run-script"]
+        args = ["python", "-u", script_path, device_id, "--run-script"]
 
         try:
+            self.status_text.value = "Running..."
+            self.update()
             print(f"[{device_id}] Executing: {' '.join(args)}")
             self.running_process = await asyncio.create_subprocess_exec(
                 *args,
                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
             async for line in self.running_process.stdout:
-                print(f"[{device_id}|SCRIPT] {line.decode().strip()}")
+                log_line = line.decode().strip()
+                print(f"[{device_id}|SCRIPT] {log_line}")
+                self.status_text.value = log_line
+                self.update()
             await self.running_process.wait()
             if self.running_process.returncode != 0:
                 stderr_output = await self.running_process.stderr.read()
-                print(f"[{device_id}] Script finished with error:\n{stderr_output.decode()}")
+                error_message = stderr_output.decode()
+                print(f"[{device_id}] Script finished with error:\n{error_message}")
+                self.status_text.value = f"Error: {error_message.splitlines()[-1]}"
+            else:
+                self.status_text.value = "Finished"
         except asyncio.CancelledError:
             print(f"[{device_id}] Task was cancelled.")
+            self.status_text.value = "Cancelled"
         except Exception as e:
             print(f"Error running script on {device_id}: {e}")
+            self.status_text.value = "Error"
         finally:
             self.running_task = None
             self.running_process = None
@@ -121,4 +134,6 @@ class DeviceControl(ft.Row):
         self.play_button.tooltip = "Run script"
         self.status_indicator.visible = False
         self.checkbox.disabled = False
+        if self.status_text.value not in ["Finished", "Cancelled"] and "Error" not in self.status_text.value:
+            self.status_text.value = "Idle"
         self.update()

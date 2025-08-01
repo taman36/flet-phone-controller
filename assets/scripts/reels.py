@@ -41,11 +41,12 @@ def main(device_id):
     try:
         # Connect to the device
         d = u2.connect(device_id)
-        package_name = "com.instagram.android"
+        #package_name = "com.instagram.android"
 
         # Launch Instagram
         print(f"[{device_id}] Opening Instagram...")
-        d.app_start(package_name, stop=True)
+        #d.app_start(package_name, stop=True)
+        d.open_url("https://www.instagram.com/")
 
         # Navigate to the Reels tab
         print(f"[{device_id}] Navigating to Reels tab...")
