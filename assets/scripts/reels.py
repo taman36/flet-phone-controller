@@ -128,7 +128,7 @@ def main(device_id):
 
             # 5. Swipe to the next video
             print(f"[{device_id}] Swiping to next video...")
-            d.swipe(start_x, start_y, start_x, end_y, duration=0.5)
+            d.swipe(start_x, start_y, start_x, end_y, duration=0.1)
             time.sleep(random.uniform(1, 2))
 
         print(f"[{device_id}] Scroll target of {VIDEOS_TO_SCROLL} videos reached.")

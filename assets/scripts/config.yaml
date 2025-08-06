@@ -1,3 +1,6 @@
+login.py:
+  ACCOUNTS: []
+  DISPLAY_NAME: Instagram login
 reels.py:
   COMMENT_CHANCE_PERCENT: 70
   COMMENT_LIST:

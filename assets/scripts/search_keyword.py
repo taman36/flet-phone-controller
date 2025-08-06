@@ -46,8 +46,7 @@ def main(device_id):
 
     try:
         d = u2.connect(device_id)
-        package_name = "com.instagram.android"
-        d.app_start(package_name, stop=True)
+        d.open_url("https://www.instagram.com/")
 
         print(f"[{device_id}] Navigating to search...")
         d(description="Search and explore").click(timeout=20.0)
@@ -117,7 +116,7 @@ def main(device_id):
                         d.press("back")
                     pass
 
-            d.swipe(width / 2, height * 0.8, width / 2, height * 0.2, 0.5)
+            d.swipe(width / 2, height * 0.8, width / 2, height * 0.2, 0.5, duration=0.1)
             time.sleep(random.uniform(1, 2))
 
         print(f"[{device_id}] Action loop finished after {VIDEOS_TO_SCROLL} videos.")

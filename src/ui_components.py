@@ -88,7 +88,7 @@ class DeviceControl(ft.Row):
 
     async def run_script_async(self, script_filename, device_id):
         script_path = os.path.join(BASE_DIR, "assets/scripts", script_filename)
-        args = ["python", "-u", script_path, device_id, "--run-script"]
+        args = [sys.executable, "-u", script_path, device_id, "--run-script"]
 
         try:
             self.status_text.value = "Running..."
