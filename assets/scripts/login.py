@@ -69,6 +69,28 @@ def get_first_account_without_ip():
     print("[LoginScript] No accounts without IP found.")
     return None, None
 
+def setup_uiautomator2(device_ip):
+    """
+    Setup UIAutomator2 on the device if not already installed.
+    """
+    try:
+        print(f"[{device_ip}] Checking UIAutomator2 setup...")
+        d = u2.connect(device_ip)
+        d.info  # Test connection
+        print(f"[{device_ip}] UIAutomator2 is already set up and working.")
+        return True
+    except Exception as e:
+        print(f"[{device_ip}] UIAutomator2 setup needed: {e}")
+        try:
+            print(f"[{device_ip}] Installing UIAutomator2...")
+            d = u2.connect(device_ip)
+            d.uiautomator.start()
+            print(f"[{device_ip}] UIAutomator2 setup completed.")
+            return True
+        except Exception as setup_error:
+            print(f"[{device_ip}] Failed to setup UIAutomator2: {setup_error}")
+            return False
+
 def mark_account_with_ip(account_index, device_ip):
     """
     Mark an account at the given index with device_ip after successful login.
@@ -160,16 +182,39 @@ def login_instagram(device_ip):
         print(f"[{device_ip}] Could not get an account. Exiting.")
         return False
 
+    # Setup UIAutomator2 if needed
+    if not setup_uiautomator2(device_ip):
+        print(f"[{device_ip}] Could not setup UIAutomator2. Exiting.")
+        return False
+
     try:
         # Extract details from the account object
         username = account['user']
         password = account['pass']
         secret_code = account['secret']
         
-        # Connect to the Android device
+        # Connect to the Android device with retry logic
         print(f"[{device_ip}] Connecting to device...")
-        d = u2.connect(device_ip)
-        print(f"[{device_ip}] Connected to device.")
+        d = None
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                d = u2.connect(device_ip)
+                # Test connection by getting device info
+                device_info = d.info
+                print(f"[{device_ip}] Connected to device: {device_info.get('productName', 'Unknown')}")
+                break
+            except Exception as conn_error:
+                print(f"[{device_ip}] Connection attempt {attempt + 1}/{max_retries} failed: {conn_error}")
+                if attempt < max_retries - 1:
+                    print(f"[{device_ip}] Retrying in 3 seconds...")
+                    time.sleep(3)
+                else:
+                    print(f"[{device_ip}] Failed to connect after {max_retries} attempts. Please check:")
+                    print(f"[{device_ip}] 1. Device is connected via ADB")
+                    print(f"[{device_ip}] 2. UIAutomator2 is installed on device")
+                    print(f"[{device_ip}] 3. Network connection is stable")
+                    return False
         
         # Open Instagram URL
         print(f"[{device_ip}] Opening Instagram")
@@ -264,7 +309,21 @@ def login_instagram(device_ip):
             
     except Exception as e:
         # Log the error with account info (account still exists in config)
-        print(f"[{device_ip}] An unexpected error occurred for user {account.get('user') if account else 'unknown'}: {str(e)}")
+        error_msg = str(e)
+        print(f"[{device_ip}] An unexpected error occurred for user {account.get('user') if account else 'unknown'}: {error_msg}")
+        
+        # Provide specific guidance based on error type
+        if "UiAutomation not connected" in error_msg:
+            print(f"[{device_ip}] SOLUTION: UIAutomator2 connection issue")
+            print(f"[{device_ip}] Try: adb connect {device_ip}")
+            print(f"[{device_ip}] Then: python -m uiautomator2 init")
+        elif "device not found" in error_msg.lower():
+            print(f"[{device_ip}] SOLUTION: Device not reachable")
+            print(f"[{device_ip}] Check: adb devices")
+        elif "network" in error_msg.lower() or "timeout" in error_msg.lower():
+            print(f"[{device_ip}] SOLUTION: Network connectivity issue")
+            print(f"[{device_ip}] Check: ping {device_ip}")
+        
         return False
 
 def main(device_id):
