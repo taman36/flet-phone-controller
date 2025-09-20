@@ -201,7 +201,11 @@ class AppLogic:
             save_config(config)
             self.settings_dialog.open = False
             self.page.update()
-            asyncio.create_task(self.show_snackbar(f"Settings saved for {display_name}!"))
+            
+            # Show snackbar without async
+            self.snack_bar.content = ft.Text(f"Settings saved for {display_name}!")
+            self.snack_bar.open = True
+            self.page.update()
         
         def close_dialog(e):
             self.settings_dialog.open = False
@@ -300,4 +304,7 @@ class AppUI(ft.Column):
         if selected_script:
             self.app_logic.open_script_settings(selected_script)
         else:
-            asyncio.create_task(self.app_logic.show_snackbar("Please select a script first!"))
+            # Show snackbar without async
+            self.app_logic.snack_bar.content = ft.Text("Please select a script first!")
+            self.app_logic.snack_bar.open = True
+            self.app_logic.page.update()
